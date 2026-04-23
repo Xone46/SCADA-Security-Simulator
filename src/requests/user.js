@@ -1,27 +1,35 @@
-import axios from 'axios'
-// const VUE_APP_API_BASE_URL = "/api";
-const VUE_APP_API_BASE_URL = "http://localhost:5000/api/v1";
-const config = {
-    headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-    }
+import API from "./api";
+
+export default {
+  connexion(email, password) {
+    return API.post("/auth/login", { email, password });
+  },
+
+  inscription(data) {
+    return API.post("/users/register", data);
+  },
+
+  getAllUsers() {
+    return API.get("/users");
+  },
+
+  getUserById(id) {
+    return API.get(`/users/${id}`);
+  },
+
+  updateUser(id, data) {
+    return API.put(`/users/${id}`, data);
+  },
+
+  updateUserRole(id, role) {
+    return API.put(`/users/${id}/role`, { role });
+  },
+
+  deleteUser(id) {
+    return API.delete(`/users/${id}`);
+  },
+
+  updateUserStatus(id, status) {
+   return API.put(`/users/${id}/status`, { status });
+  }
 };
-
-class User {
-
-    static inscription(userData) {
-        return new Promise((resolve, reject) => {
-            axios.post(`${VUE_APP_API_BASE_URL}/user/inscription`, userData, config)
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
-    }
-
-}
-
-export default User;

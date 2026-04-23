@@ -1,51 +1,57 @@
 <template>
   <div class="login">
-
     <div class="form" v-if="flagForm">
-
-
-      <!-- Message de succès -->
       <div v-if="successMessage" class="success">
         {{ successMessage }}
       </div>
 
-      <!-- Erreurs -->
       <ul v-if="flagMessage" class="errors">
         <li v-for="(error, index) in errors" :key="index">- {{ error }}</li>
       </ul>
 
-      <!-- Matricule -->
       <label>
         <h3>Matricule : <span class="start">*</span></h3>
-        <input type="text" v-model.trim="matricule" placeholder="Votre matricule" />
+        <input
+          type="text"
+          v-model.trim="matricule"
+          placeholder="Votre matricule"
+        />
       </label>
 
-      <!-- Nom -->
       <label>
         <h3>Nom : <span class="start">*</span></h3>
-        <input type="text" v-model.trim="nom" placeholder="Votre nom" />
+        <input
+          type="text"
+          v-model.trim="nom"
+          placeholder="Votre nom"
+        />
       </label>
 
-      <!-- Prénom -->
       <label>
         <h3>Prénom : <span class="start">*</span></h3>
-        <input type="text" v-model.trim="prenom" placeholder="Votre prénom" />
+        <input
+          type="text"
+          v-model.trim="prenom"
+          placeholder="Votre prénom"
+        />
       </label>
 
-      <!-- Email -->
       <label>
         <h3>E-mail : <span class="start">*</span></h3>
-        <input type="email" v-model.trim="email" placeholder="Votre email" />
+        <input
+          type="email"
+          v-model.trim="email"
+          placeholder="Votre email"
+        />
       </label>
 
-      <!-- Mot de passe -->
       <label class="password-label">
         <h3>Mot de passe : <span class="start">*</span></h3>
         <div class="password-wrapper">
           <input
             :type="showPassword ? 'text' : 'password'"
             v-model="password"
-            @keyup.enter="User"
+            @keyup.enter="inscrit"
             placeholder="Votre mot de passe"
           />
           <span class="toggle-password" @click="toggleShowPassword">
@@ -54,18 +60,27 @@
         </div>
       </label>
 
-      <!-- Boutons -->
-      <div class="buttons">
-        <button class="connexion" @click="inscrit">S'inscrire</button>
-        <button class="quitter" @click="quitter">Quitter</button>
-      </div>
+      <label>
+        <h3>Rôle : <span class="start">*</span></h3>
+        <select v-model="role">
+          <option value="user">Utilisateur</option>
+          <option value="admin">Administrateur</option>
+        </select>
+      </label>
 
+      <div class="buttons">
+        <button class="connexion" @click="inscrit" :disabled="flagSpinner">
+          S'inscrire
+        </button>
+        <button class="quitter" @click="quitter" :disabled="flagSpinner">
+          Quitter
+        </button>
+      </div>
     </div>
 
     <div class="spinner" v-if="flagSpinner">
       <Spinner />
     </div>
-
   </div>
 </template>
 
@@ -79,11 +94,12 @@ export default {
 
   data() {
     return {
-      matricule : "",
+      matricule: "",
       nom: "",
       prenom: "",
       email: "",
       password: "",
+      role: "user",
       showPassword: false,
       flagSpinner: false,
       flagForm: true,
@@ -99,7 +115,12 @@ export default {
     },
 
     quitter() {
+      if (this.flagSpinner) return;
       this.$emit("quitter");
+    },
+
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     },
 
     async inscrit() {
@@ -107,24 +128,31 @@ export default {
       this.flagMessage = false;
       this.successMessage = "";
 
-      // Validation des champs
       if (!this.matricule) this.errors.push("Le matricule est requis.");
+      if (!this.nom) this.errors.push("Le nom est requis.");
       if (!this.prenom) this.errors.push("Le prénom est requis.");
 
       if (!this.email) {
         this.errors.push("L'email est requis.");
-      } else if (!this.email.endsWith("@gthconsult.ma")) {
-        this.errors.push("L'email doit contenir le domaine @gthconsult.ma.");
+      } else if (!this.isValidEmail(this.email)) {
+        this.errors.push("Le format de l'email est invalide.");
       }
 
-      if (!this.password) this.errors.push("Le mot de passe est requis.");
+      if (!this.password) {
+        this.errors.push("Le mot de passe est requis.");
+      } else if (this.password.length < 6) {
+        this.errors.push("Le mot de passe doit contenir au moins 6 caractères.");
+      }
+
+      if (!this.role) {
+        this.errors.push("Le rôle est requis.");
+      }
 
       if (this.errors.length) {
         this.flagMessage = true;
         return;
       }
 
-      // Affichage spinner
       this.flagForm = false;
       this.flagSpinner = true;
 
@@ -134,29 +162,40 @@ export default {
           nom: this.nom,
           prenom: this.prenom,
           email: this.email,
-          password: this.password
+          password: this.password,
+          role: this.role
         });
 
         this.flagSpinner = false;
         this.flagForm = true;
 
         if (result?.data) {
-          this.successMessage = "User réussie ! Vous pouvez maintenant vous connecter.";
+          this.successMessage = "Inscription réussie ! Vous pouvez maintenant vous connecter.";
           this.matricule = "";
           this.nom = "";
           this.prenom = "";
           this.email = "";
           this.password = "";
+          this.role = "user";
+          this.showPassword = false;
         } else {
-          this.errors.push("User échouée.");
+          this.errors = ["Inscription échouée."];
           this.flagMessage = true;
         }
-
       } catch (error) {
         this.flagSpinner = false;
         this.flagForm = true;
         this.flagMessage = true;
-        this.errors = ["Erreur lors de l'User. Veuillez réessayer."];
+
+        if (error?.response?.data?.errors) {
+          this.errors = Array.isArray(error.response.data.errors)
+            ? error.response.data.errors
+            : [error.response.data.errors];
+        } else if (error?.response?.data?.message) {
+          this.errors = [error.response.data.message];
+        } else {
+          this.errors = ["Erreur lors de l'inscription. Veuillez réessayer."];
+        }
       }
     }
   }
@@ -164,9 +203,8 @@ export default {
 </script>
 
 <style scoped>
-/* Container centré */
 .login {
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -176,28 +214,19 @@ export default {
   background: #f4f6f8;
 }
 
-/* Carte */
 .form {
   width: 100%;
-  height: fit-content;
   max-width: 360px;
   background: #fff;
   padding: 20px 18px;
   border-radius: 12px;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.12);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   align-items: center;
   box-sizing: border-box;
 }
 
-/* Logo */
-.form img {
-  height: 50px;
-  margin-bottom: 12px;
-}
-
-/* Message succès */
 .success {
   width: 100%;
   padding: 10px 12px;
@@ -209,7 +238,6 @@ export default {
   text-align: center;
 }
 
-/* Erreurs */
 .errors {
   list-style: none;
   width: 100%;
@@ -225,17 +253,16 @@ export default {
   margin-bottom: 2px;
 }
 
-/* Labels et champs */
 .form label {
   width: 100%;
-  margin-bottom: 1px; /* très compact */
+  margin-bottom: 6px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
 .form label h3 {
-  margin-bottom: 2px; /* petite marge entre h3 et input */
+  margin-bottom: 4px;
   font-size: 13px;
   font-weight: 600;
   color: #222;
@@ -243,11 +270,11 @@ export default {
   line-height: 1.2;
 }
 
-/* Inputs */
-.form input {
+.form input,
+.form select {
   width: 100%;
-  height: 30px; /* compact */
-  padding: 5px 10px;
+  height: 34px;
+  padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid #ccc;
   font-size: 13.5px;
@@ -256,22 +283,22 @@ export default {
   transition: all 0.2s ease;
 }
 
-.form input:focus {
+.form input:focus,
+.form select:focus {
   border-color: #1e96c8;
-  box-shadow: 0 0 0 2px rgba(30,150,200,0.15);
+  box-shadow: 0 0 0 2px rgba(30, 150, 200, 0.15);
   outline: none;
 }
 
-/* Password */
 .password-wrapper {
   position: relative;
+  width: 100%;
 }
 
 .password-wrapper input {
   padding-right: 42px;
 }
 
-/* Toggle password */
 .toggle-password {
   position: absolute;
   top: 50%;
@@ -286,82 +313,76 @@ export default {
   opacity: 1;
 }
 
-/* Boutons */
 .buttons {
   width: 100%;
   display: flex;
   gap: 10px;
-  margin-top: 8px; /* compact */
+  margin-top: 10px;
 }
 
-/* Bouton User */
-.connexion {
+.connexion,
+.quitter {
   flex: 1;
-  height: 30px;
+  height: 34px;
   border-radius: 8px;
   font-size: 14px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #37aee2, #1e96c8);
   border: none;
   color: #fff;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.connexion:hover {
+.connexion {
+  font-weight: 600;
+  background: linear-gradient(135deg, #37aee2, #1e96c8);
+}
+
+.connexion:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 6px 14px rgba(30, 150, 200, 0.3);
 }
 
-/* Bouton quitter */
 .quitter {
-  flex: 1;
-  height: 30px;
-  border-radius: 8px;
-  font-size: 14px;
   background: #e74c3c;
-  border: none;
-  color: #fff;
-  cursor: pointer;
-  transition: background 0.2s ease;
 }
 
-.quitter:hover {
+.quitter:hover:not(:disabled) {
   background: #cf3e30;
 }
 
-/* Astérisque obligatoire */
+.connexion:disabled,
+.quitter:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .start {
   color: #e74c3c;
   font-size: 12px;
 }
 
-/* Spinner */
 .spinner {
   margin-top: 10px;
 }
 
-/* Mobile responsive */
 @media (max-width: 420px) {
   .form {
     padding: 16px 14px;
-  }
-
-  .form img {
-    height: 45px;
   }
 
   .form label h3 {
     font-size: 12px;
   }
 
-  .form input {
-    height: 28px;
+  .form input,
+  .form select {
+    height: 30px;
     font-size: 13px;
   }
 
-  .connexion, .quitter {
-    height: 28px;
+  .connexion,
+  .quitter {
+    height: 30px;
     font-size: 13px;
   }
 

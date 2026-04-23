@@ -3,7 +3,8 @@ import ScadaController from "../controllers/ScadaController.mjs";
 
 const router = express.Router();
 
-router.post("/data", ScadaController.sendData);
-router.get("/data", ScadaController.getData);
+router.get("/poll", ScadaController.pollScada);
+router.get("/latest", ScadaController.latestScada);
+router.get("/history", ScadaController.historyScada);
 
 export default router;

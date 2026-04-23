@@ -1,49 +1,67 @@
 <template>
-  <div id="app">
-    <router-view />
+  <div id="app" :class="{ 'app-layout': showSidebar }">
+    <Sidebar v-if="showSidebar" />
+    <div class="main-content" :class="{ 'with-sidebar': showSidebar }">
+      <router-view />
+    </div>
   </div>
 </template>
 
-<style scoped>
+<script>
+import Sidebar from "@/components/common/Sidebar.vue";
+
+export default {
+  name: "App",
+  components: {
+    Sidebar
+  },
+  computed: {
+    showSidebar() {
+      return this.$route.path !== "/";
+    }
+  }
+};
+</script>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
 #app {
-  width: 100%;       /* largeur fixe */
-  height: 100%;       /* hauteur fixe */
-  margin: 0 auto;      /* centrer horizontalement */
+  width: 100%;
+  height: 100%;
+  margin: 0;
   padding: 0;
+}
+
+body {
   overflow: hidden;
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  background-color: #fcf9f9;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background-color: white;
 }
 
-/* Centrer verticalement dans Electron */
-html, body {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+#app {
   overflow: hidden;
-  background-color: #fcf9f9;
 }
 
-/* Responsive pour petits écrans (message utilisateur conseillé) */
-@media (max-width: 100%), (max-height: 100%) {
-  #app {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 0.9rem; /* réduire taille si écran plus petit */
-  }
+.app-layout {
+  display: flex;
+  flex-direction: row;
+}
+
+.main-content {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+.main-content.with-sidebar {
+  flex: 1;
+  background: #eef4f8;
 }
 </style>

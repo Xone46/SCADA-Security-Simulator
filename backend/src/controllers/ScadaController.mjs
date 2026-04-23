@@ -1,25 +1,58 @@
-import { insertScadaData, getLatestScada } from "../models/scadaModel.mjs";
+import { readScadaRegisters } from "../utils/modbusClient.mjs";
+import { insertScadaData, getLatestScadaData, getScadaHistory } from "../models/scadaModel.mjs";
 
-const sendData = (req, res) => {
-    try {
-        const data = req.body;
+const pollScada = async (req, res) => {
+  try {
+    const data = await readScadaRegisters();
+    const saved = await insertScadaData(data);
 
-        insertScadaData(data);
-
-        return res.json({ msg: "DATA SAVED" });
-
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
+    return res.status(200).json({
+      message: "SCADA data collected successfully.",
+      data: saved
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while reading SCADA data.",
+      error: error.message
+    });
+  }
 };
 
-const getData = (req, res) => {
-    try {
-        const data = getLatestScada(20);
-        return res.json(data);
-    } catch (err) {
-        return res.status(500).json({ error: err.message });
-    }
+const latestScada = async (req, res) => {
+  try {
+    const data = await getLatestScadaData();
+
+    return res.status(200).json({
+      message: "Latest SCADA data fetched successfully.",
+      data
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while fetching latest SCADA data.",
+      error: error.message
+    });
+  }
 };
 
-export default { sendData, getData };
+const historyScada = async (req, res) => {
+  try {
+    const limit = Number(req.query.limit || 50);
+    const data = await getScadaHistory(limit);
+
+    return res.status(200).json({
+      message: "SCADA history fetched successfully.",
+      data
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while fetching SCADA history.",
+      error: error.message
+    });
+  }
+};
+
+export default {
+  pollScada,
+  latestScada,
+  historyScada
+};

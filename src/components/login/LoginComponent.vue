@@ -1,24 +1,26 @@
 <template>
   <div class="login">
-
     <div class="form" v-if="flagForm">
-
-
-      <!-- Erreurs -->
       <ul v-if="flagMessage" class="errors">
         <li v-for="(error, index) in errors" :key="index">- {{ error }}</li>
       </ul>
 
-      <!-- Formulaire -->
       <label>
         <h3>E-mail : <span class="start" v-if="!email">*</span></h3>
-        <input type="text" v-model.trim="email" placeholder="Votre email" />
+        <input
+          class="form-input"
+          type="text"
+          v-model.trim="email"
+          placeholder="Votre email"
+          @keyup.enter="connexion"
+        />
       </label>
 
       <label class="password-label">
-        <h3>Mot de passe : <span class="start" v-if="!password && rememberMe">*</span></h3>
+        <h3>Mot de passe : <span class="start" v-if="!password">*</span></h3>
         <div class="password-wrapper">
           <input
+            class="form-input"
             :type="showPassword ? 'text' : 'password'"
             v-model="password"
             @keyup.enter="connexion"
@@ -31,29 +33,40 @@
       </label>
 
       <label class="remember">
-        <input type="checkbox" v-model="rememberMe" /> Se souvenir de moi
+        <input type="checkbox" v-model="rememberMe" />
+        <span>Se souvenir de moi</span>
       </label>
 
       <div class="buttons">
-        <button class="connexion" @click="connexion">Connexion</button>
-        <button class="quitter" @click="quitter">Quitter</button>
+        <button
+          class="connexion"
+          @click="connexion"
+          :disabled="flagSpinner"
+        >
+          Connexion
+        </button>
+        <button
+          class="quitter"
+          @click="quitter"
+          :disabled="flagSpinner"
+        >
+          Quitter
+        </button>
       </div>
 
       <p class="small-note">
-        <em>Astuce : coche "Se souvenir de moi" pour préremplir l'email et le mot de passe.</em>
+        <em>Astuce : coche "Se souvenir de moi" pour préremplir votre e-mail.</em>
       </p>
-
     </div>
 
     <div class="spinner" v-if="flagSpinner">
       <Spinner />
     </div>
-
   </div>
 </template>
 
 <script>
-import Inspecteurs from "@/requests/api";
+import User from "@/requests/user";
 import Spinner from "vue-simple-spinner";
 
 export default {
@@ -62,18 +75,15 @@ export default {
 
   data() {
     return {
-      // 🔐 Données utilisateur (préremplies si rememberMe)
       email: localStorage.getItem("email") || "",
-      password: localStorage.getItem("password") || "",
+      password: "",
       rememberMe: localStorage.getItem("rememberMe") === "true",
 
-      // 👁️ UI
       showPassword: false,
       flagSpinner: false,
       flagForm: true,
       flagMessage: false,
 
-      // ❌ Erreurs
       errors: []
     };
   },
@@ -84,21 +94,22 @@ export default {
     },
 
     quitter() {
+      if (this.flagSpinner) return;
       this.$emit("quitter");
     },
 
+    isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    },
+
     async connexion() {
-      /* ======================
-         🔄 RESET
-      ====================== */
       this.errors = [];
       this.flagMessage = false;
 
-      /* ======================
-         ✅ VALIDATION
-      ====================== */
       if (!this.email) {
         this.errors.push("L'email est requis.");
+      } else if (!this.isValidEmail(this.email)) {
+        this.errors.push("Le format de l'email est invalide.");
       }
 
       if (!this.password) {
@@ -110,14 +121,11 @@ export default {
         return;
       }
 
-      /* ======================
-         ⏳ LOADING
-      ====================== */
       this.flagForm = false;
       this.flagSpinner = true;
 
       try {
-        const result = await Inspecteurs.connexion(this.email, this.password);
+        const result = await User.connexion(this.email, this.password);
 
         this.flagSpinner = false;
         this.flagForm = true;
@@ -128,36 +136,23 @@ export default {
           return;
         }
 
-        /* ======================
-           💾 LOCAL STORAGE
-        ====================== */
         localStorage.setItem("rememberMe", this.rememberMe ? "true" : "false");
 
         if (this.rememberMe) {
           localStorage.setItem("email", this.email);
-          localStorage.setItem("password", this.password); // ⚠️ éviter en prod
         } else {
           localStorage.removeItem("email");
-          localStorage.removeItem("password");
         }
 
-        /* ======================
-           🧠 SESSION STORAGE
-        ====================== */
-        sessionStorage.setItem("id", result.data.id);
+        sessionStorage.setItem("id", result.data.id || "");
         sessionStorage.setItem("nom", result.data.nom || "");
         sessionStorage.setItem("prenom", result.data.prenom || "");
         sessionStorage.setItem("matricule", result.data.matricule || "");
-
-        // 🔥 ROLE NORMALISÉ (ADMIN/USER → admin/user)
         sessionStorage.setItem(
           "role",
           (result.data.role || "user").toLowerCase()
         );
 
-        /* ======================
-           🚀 REDIRECTION
-        ====================== */
         this.$router.push("/dashboard").catch(() => {});
       } catch (error) {
         this.flagSpinner = false;
@@ -194,36 +189,35 @@ export default {
 .form {
   width: 100%;
   max-width: 600px;
-  background-color: rgba(210, 210, 214, 0.9);
-  padding: 20px;
-  border-radius: 8px;
+  background-color: rgba(210, 210, 214, 0.92);
+  padding: 24px;
+  border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.form img {
-  height: 80px;
-  margin-bottom: 20px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
 }
 
 .errors {
   list-style: none;
-  padding: 0;
-  margin-bottom: 15px;
+  padding: 12px;
+  margin: 0 0 15px 0;
   width: 100%;
   text-align: left;
+  background: rgba(255, 235, 235, 0.9);
+  border: 1px solid #f3b7b7;
+  border-radius: 8px;
 }
 
 .errors li {
-  color: #ff6b6b;
+  color: #c62828;
   font-size: 14px;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
 }
 
 .form label {
   width: 100%;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   text-align: left;
 }
 
@@ -231,19 +225,25 @@ export default {
   margin: 5px 0;
   color: black;
   font-weight: 600;
+  font-size: 15px;
 }
 
-.form input[type="text"],
-.form input[type="password"] {
+.form-input {
   width: 100%;
-  height: 40px;
-  padding: 8px;
+  height: 42px;
+  padding: 8px 12px;
   margin-top: 5px;
   border: 1px solid #222;
-  border-radius: 4px;
+  border-radius: 6px;
   outline: none;
   box-sizing: border-box;
   background: #fff;
+  font-size: 14px;
+}
+
+.form-input:focus {
+  border-color: #1e96c8;
+  box-shadow: 0 0 0 3px rgba(30, 150, 200, 0.15);
 }
 
 .password-wrapper {
@@ -251,15 +251,14 @@ export default {
   width: 100%;
 }
 
-.password-wrapper input {
-  width: 100%;
+.password-wrapper .form-input {
   padding-right: 45px;
 }
 
 .toggle-password {
   position: absolute;
   top: 50%;
-  right: 10px;
+  right: 12px;
   transform: translateY(-50%);
   cursor: pointer;
   user-select: none;
@@ -269,7 +268,7 @@ export default {
 
 .remember {
   width: 100%;
-  margin: 5px 0 15px 0;
+  margin: 8px 0 15px 0;
   color: black;
   display: flex;
   align-items: center;
@@ -284,20 +283,27 @@ export default {
 
 .form button {
   flex: 1;
-  height: 40px;
+  height: 42px;
   margin-top: 5px;
   border: none;
-  border-radius: 5px;
+  border-radius: 6px;
   color: white;
   font-size: 15px;
   cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .connexion {
-  background-color: #04AA6D;
+  background-color: #04aa6d;
 }
 
-.connexion:hover {
+.connexion:hover:not(:disabled) {
   background-color: #029e62;
 }
 
@@ -305,7 +311,7 @@ export default {
   background-color: #fa0e06;
 }
 
-.quitter:hover {
+.quitter:hover:not(:disabled) {
   background-color: #d90c05;
 }
 
@@ -319,7 +325,6 @@ export default {
   margin-top: 20px;
 }
 
-/* Note */
 .small-note {
   margin-top: 12px;
   font-size: 12px;
@@ -327,27 +332,22 @@ export default {
   text-align: center;
 }
 
-/* Responsive mobile */
 @media (max-width: 480px) {
   .form {
-    padding: 15px;
-  }
-
-  .form img {
-    height: 60px;
+    padding: 16px;
   }
 
   .form h3 {
-    font-size: 16px;
-  }
-
-  .form input {
-    height: 35px;
     font-size: 14px;
   }
 
+  .form-input {
+    height: 38px;
+    font-size: 13px;
+  }
+
   .form button {
-    height: 35px;
+    height: 38px;
     font-size: 14px;
   }
 

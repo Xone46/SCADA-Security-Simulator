@@ -1,75 +1,49 @@
-import axios from 'axios'
-// const VUE_APP_API_BASE_URL = "/api";
-const VUE_APP_API_BASE_URL = "http://localhost:5000/api/v1";
-const config = {
-    headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-    }
-};
+import axios from "axios";
 
-class Bd {
+const API = axios.create({
+  baseURL: process.env.VUE_APP_API_URL || "http://localhost:5000/api/v1",
+  timeout: 15000,
+  headers: {
+    "Content-Type": "application/json"
+  }
+});
 
-    static sauvgarder() {
-        return new Promise((resolve, reject) => {
-            axios.get(`${VUE_APP_API_BASE_URL}/bd/sauvgarder`,
-                 config
-                )
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
+// Ajouter automatiquement le token si existant
+API.interceptors.request.use(
+  config => {
+    const token = sessionStorage.getItem("token");
 
-        })
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
 
-    static nettoyer() {
-        return new Promise((resolve, reject) => {
-            axios.get(`${VUE_APP_API_BASE_URL}/bd/nettoyer`,
-                 config
-                )
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
+    return config;
+  },
+  error => Promise.reject(error)
+);
 
-        })
+// Gestion globale des erreurs
+API.interceptors.response.use(
+  response => response,
+  error => {
+    const status = error?.response?.status;
+
+    if (status === 401) {
+      console.warn("Session expirée ou non autorisée");
+      sessionStorage.clear();
+      window.location.href = "/";
     }
 
-    static restaurer(backupId) {
-        return new Promise((resolve, reject) => {
-            axios.get(`${VUE_APP_API_BASE_URL}/bd/restaurer/${backupId}`,
-                 config
-                )
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-
-        })
+    if (status === 403) {
+      console.warn("Accès refusé");
     }
 
-    static read() {
-        return new Promise((resolve, reject) => {
-            axios.get(`${VUE_APP_API_BASE_URL}/bd/read`,
-                 config
-                )
-                .then(response => {
-                    resolve(response);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-
-        })
+    if (!error.response) {
+      console.error("Serveur inaccessible ou problème réseau");
     }
 
-}
+    return Promise.reject(error);
+  }
+);
 
-export default Bd;
+export default API;

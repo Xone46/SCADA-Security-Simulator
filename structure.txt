@@ -1,0 +1,151 @@
+SCADA-Security-Simulator/
+│
+├── frontend/                            # Interface desktop SCADA
+│   ├── public/
+│   │   └── index.html
+│   │
+│   ├── src/
+│   │   ├── assets/                      # images, logos, styles globaux
+│   │   │
+│   │   ├── components/
+│   │   │   ├── auth/
+│   │   │   │   ├── LoginComponent.vue
+│   │   │   │   └── UserComponent.vue
+│   │   │   │
+│   │   │   ├── dashboard/
+│   │   │   │   ├── VariableCard.vue
+│   │   │   │   ├── SystemStatusCard.vue
+│   │   │   │   ├── RiskCard.vue
+│   │   │   │   ├── SecurityAlertCard.vue
+│   │   │   │   └── VariableChart.vue
+│   │   │   │
+│   │   │   └── common/
+│   │   │       ├── HeaderBar.vue
+│   │   │       ├── Sidebar.vue
+│   │   │       └── LoadingSpinner.vue
+│   │   │
+│   │   ├── views/
+│   │   │   ├── HomeView.vue
+│   │   │   ├── DashboardView.vue
+│   │   │   ├── AlertsView.vue
+│   │   │   ├── AuditReportView.vue
+│   │   │   ├── HistoryView.vue
+│   │   │   └── ArchitectureView.vue
+│   │   │
+│   │   ├── requests/
+│   │   │   ├── api.js
+│   │   │   ├── user.js
+│   │   │   ├── scada.js
+│   │   │   ├── alert.js
+│   │   │   └── audit.js
+│   │   │
+│   │   ├── router/
+│   │   │   └── index.js
+│   │   │
+│   │   ├── store/
+│   │   │   └── index.js
+│   │   │
+│   │   ├── App.vue
+│   │   ├── main.js
+│   │   └── background.js               # Electron
+│   │
+│   ├── package.json
+│   └── vue.config.js
+│
+├── backend/                             # API + collecte + alertes
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── db.mjs
+│   │   │
+│   │   ├── controllers/
+│   │   │   ├── AuthController.mjs
+│   │   │   ├── UserController.mjs
+│   │   │   ├── ScadaController.mjs
+│   │   │   ├── AlertController.mjs
+│   │   │   └── AuditController.mjs
+│   │   │
+│   │   ├── middlewares/
+│   │   │   ├── loggingMiddleware.mjs
+│   │   │   ├── authMiddleware.mjs
+│   │   │   └── roleMiddleware.mjs
+│   │   │
+│   │   ├── models/
+│   │   │   ├── userModel.mjs
+│   │   │   ├── scadaModel.mjs
+│   │   │   ├── alertModel.mjs
+│   │   │   └── auditModel.mjs
+│   │   │
+│   │   ├── routes/
+│   │   │   ├── auth.mjs
+│   │   │   ├── user.mjs
+│   │   │   ├── scada.mjs
+│   │   │   ├── alert.mjs
+│   │   │   └── audit.mjs
+│   │   │
+│   │   ├── services/
+│   │   │   ├── scadaPollingService.mjs
+│   │   │   ├── anomalyService.mjs
+│   │   │   ├── logicDetectionService.mjs
+│   │   │   ├── protocolDetectionService.mjs
+│   │   │   ├── riskEngineService.mjs
+│   │   │   ├── alertService.mjs
+│   │   │   └── auditReportService.mjs
+│   │   │
+│   │   ├── utils/
+│   │   │   ├── logger.mjs
+│   │   │   ├── modbusClient.mjs
+│   │   │   ├── responseFormatter.mjs
+│   │   │   └── thresholds.mjs
+│   │   │
+│   │   └── index.mjs
+│   │
+│   ├── package.json
+│   └── .env
+│
+├── plc_simulation/                      # Simulation industrielle
+│   ├── plc_server.py                    # PLC simulé principal
+│   ├── process_generator.py             # génération données normales
+│   ├── scenario_attack.py               # scénarios d’attaque simulés
+│   ├── anomaly_detector.py              # détection Python
+│   ├── logic_detector.py                # détection logique process
+│   ├── protocol_detector.py             # détection comportement Modbus
+│   ├── risk_engine.py                   # score de risque
+│   └── config.py
+│
+├── docs/                                # Documentation projet
+│   ├── architecture/
+│   │   ├── global_architecture.png
+│   │   ├── sequence_flow.png
+│   │   └── deployment_diagram.png
+│   │
+│   ├── report/
+│   │   ├── pfe_report.docx
+│   │   ├── pfe_report.pdf
+│   │   └── references.md
+│   │
+│   ├── presentation/
+│   │   └── soutenance.pptx
+│   │
+│   └── test_scenarios/
+│       ├── scenario_normal.md
+│       ├── scenario_attack_1.md
+│       ├── scenario_attack_2.md
+│       └── validation_results.md
+│
+├── logs/                                # journaux
+│   ├── system.log
+│   ├── alerts.log
+│   └── detection.log
+│
+├── datasets/                            # données de test et validation
+│   ├── normal/
+│   ├── attack/
+│   └── mixed/
+│
+├── docker/                              # si tu veux dockeriser
+│   ├── Dockerfile.frontend
+│   ├── Dockerfile.backend
+│   └── docker-compose.yml
+│
+├── README.md
+└── LICENSE

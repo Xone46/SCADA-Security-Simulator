@@ -5,7 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 // middlewares
-import { loggingMiddleware } from "./middelwares/loggingMiddleware.mjs";
+import logger from "./middlewares/loggingMiddleware.mjs"
 
 // routes
 import usersRouter from "./routes/user.mjs";
@@ -15,9 +15,7 @@ import scadaRouter from "./routes/scada.mjs";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-//
 // 🟢 Middlewares globaux
-//
 app.use(express.json());
 
 app.use(cors({
@@ -27,9 +25,7 @@ app.use(cors({
 
 app.use(cookieParser(process.env.SECRET_COOKIE));
 
-//
 // 🟡 Session
-//
 app.use(session({
     secret: process.env.SESSION || "scada-secret",
     saveUninitialized: false,
@@ -39,21 +35,15 @@ app.use(session({
     }
 }));
 
-//
 // 🟢 Logging
-//
-app.use(loggingMiddleware);
+app.use(logger);
 
-//
 // 🔵 Routes API
-//
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", usersRouter);
 app.use("/api/v1/scada", scadaRouter);
 
-//
 // 🟣 Route test
-//
 app.get("/", (req, res) => {
     req.session.visited = true;
 
@@ -68,9 +58,7 @@ app.get("/", (req, res) => {
     });
 });
 
-//
 // 🔴 Lancer serveur
-//
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
