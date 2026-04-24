@@ -6,8 +6,10 @@ import AlertsView from '../views/AlertsView.vue'
 import AuditReportView from '../views/AuditReportView.vue'
 import HistoryView from "../views/HistoryView.vue";
 import ArchitectureView from "../views/ArchitectureView.vue";
+import ArchitectureDesignerView from "@/views/ArchitectureDesignerView.vue";
 import PlcConfigView from "../views/PlcConfigView.vue";
 import UsersManagementView from "../views/UsersManagementView.vue";
+import PlcDetailView from "../views/PlcDetailView.vue";
 
 Vue.use(VueRouter)
 
@@ -48,17 +50,31 @@ const routes = [
     component: ArchitectureView,
     meta: { requiresAuth: true }
   },
+
   {
-    path: '/plc-config',
-    name: 'plc-config',
+    path: "/architecture/designer/:id",
+    name: "architecture-designer",
+    component: ArchitectureDesignerView,
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: "/plc-config",
+    name: "plc-config",
     component: PlcConfigView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/users-management',
     name: 'users-management',
     component: UsersManagementView,
     meta: { requiresAuth: true }
+  },
+
+  {
+    path: "/plc/:id",
+    name: "plc-detail",
+    component: PlcDetailView,
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
 
   {

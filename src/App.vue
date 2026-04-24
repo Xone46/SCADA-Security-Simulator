@@ -1,7 +1,8 @@
 <template>
   <div id="app" :class="{ 'app-layout': showSidebar }">
     <Sidebar v-if="showSidebar" />
-    <div class="main-content" :class="{ 'with-sidebar': showSidebar }">
+
+    <div class="main-content">
       <router-view />
     </div>
   </div>
@@ -12,9 +13,8 @@ import Sidebar from "@/components/common/Sidebar.vue";
 
 export default {
   name: "App",
-  components: {
-    Sidebar
-  },
+  components: { Sidebar },
+
   computed: {
     showSidebar() {
       return this.$route.path !== "/";
@@ -40,9 +40,6 @@ body,
 body {
   overflow: hidden;
   font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: white;
 }
 
 #app {
@@ -51,17 +48,12 @@ body {
 
 .app-layout {
   display: flex;
-  flex-direction: row;
 }
 
 .main-content {
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-}
-
-.main-content.with-sidebar {
   flex: 1;
+  height: 100vh;
+  overflow: auto;
   background: #eef4f8;
 }
 </style>

@@ -78,6 +78,109 @@ db.serialize(() => {
     )
   `)
 
+  // PLCS
+  db.run(`
+    CREATE TABLE IF NOT EXISTS plcs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      tag TEXT,
+      brand TEXT,
+      manufacturer TEXT,
+      model TEXT,
+      plc_type TEXT,
+      serial_number TEXT,
+      firmware_version TEXT,
+      description TEXT,
+
+      ip_address TEXT NOT NULL,
+      port INTEGER DEFAULT 502,
+      protocol TEXT DEFAULT 'Modbus TCP',
+      unit_id INTEGER DEFAULT 1,
+      location TEXT,
+      production_line TEXT,
+
+      installation_date TEXT,
+      commissioning_date TEXT,
+      decommissioning_date TEXT,
+      status TEXT DEFAULT 'active',
+
+      installed_by TEXT,
+      maintained_by TEXT,
+      supplier TEXT,
+      internal_owner TEXT,
+
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // PLC-CONTROLLED DEVICES
+  db.run(`
+    CREATE TABLE IF NOT EXISTS plc_controls (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      plc_id INTEGER NOT NULL,
+
+      inspector_name TEXT,
+      inspector_firstname TEXT,
+      company TEXT,
+
+      intervention_date TEXT,
+      status TEXT,
+      criticality TEXT,
+
+      observations TEXT,
+      recommendations TEXT,
+
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+      FOREIGN KEY (plc_id) REFERENCES plcs(id)
+    )
+  `)
+
+  db.run(`
+  CREATE TABLE IF NOT EXISTS architecture_plans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    department TEXT,
+    site TEXT,
+    responsible TEXT,
+    description TEXT,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS architecture_nodes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    x_position INTEGER DEFAULT 100,
+    y_position INTEGER DEFAULT 100,
+    ip_address TEXT,
+    status TEXT DEFAULT 'active',
+    criticality TEXT DEFAULT 'medium',
+    linked_plc_id INTEGER,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (plan_id) REFERENCES architecture_plans(id)
+  )
+`);
+
+db.run(`
+  CREATE TABLE IF NOT EXISTS architecture_edges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plan_id INTEGER NOT NULL,
+    source_node_id INTEGER NOT NULL,
+    target_node_id INTEGER NOT NULL,
+    label TEXT,
+    protocol TEXT DEFAULT 'Ethernet',
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (plan_id) REFERENCES architecture_plans(id)
+  )
+`);
+
 })
 
 export default db

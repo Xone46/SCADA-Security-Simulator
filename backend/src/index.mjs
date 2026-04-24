@@ -11,6 +11,10 @@ import logger from "./middlewares/loggingMiddleware.mjs"
 import usersRouter from "./routes/user.mjs";
 import authRouter from "./routes/auth.mjs";
 import scadaRouter from "./routes/scada.mjs";
+import plcRouter from "./routes/plc.mjs";
+import plcControlRoutes from "./routes/plcControl.mjs";
+import architectureRouter from "./routes/architecture.mjs";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +46,9 @@ app.use(logger);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", usersRouter);
 app.use("/api/v1/scada", scadaRouter);
+app.use("/api/v1/plcs", plcRouter);
+app.use("/api/v1/plc-controls", plcControlRoutes);
+app.use("/api/v1/architecture", architectureRouter);
 
 // 🟣 Route test
 app.get("/", (req, res) => {
